@@ -1,7 +1,10 @@
-不需要总页数的分页
-Pagination of the total number of pages is not required
-传入： 当前页 数据长度 获取数据函数 [每页显示条数,默认8条]
-在外监听： 页数变化
+<!--
+    没有总页数的分页
+    传入： startPage: 当前页
+          dataLength: 数据长度
+          [limit]: 每页显示条数,默认8条
+    在外监听： changePage: 返回值为新页数 赋值给父组件的当前页变量
+-->
 <template>
   <div class="pagination" v-show="dataLength == this.limit && startPage == 0 || startPage > 0">
     <a-divider />
@@ -21,19 +24,17 @@ export default {
     props: {
         startPage: {
             type: Number,
-            default: 0
+            default: 0,
+            required: true
         },
         dataLength: {
             type: Number,
-            default: 0
+            default: 0,
+            required: true
         },
         limit: {
             type: Number,
             default: 8
-        },
-        getList: {
-            type: Function,
-            default: function () {}
         }
     },
     computed: {
@@ -42,20 +43,18 @@ export default {
       }
     },
     watch: {
-      startPage (newVal, oldValue) {
-        console.log(this.cachePage)
-        if (newVal !== oldValue) {
-          this.preDisabled = false
-          this.afterDisabled = false
-          // 判断跳转页是否为第一页
-          if (newVal === 0) {
-            this.preDisabled = true
+      startPage: {
+        handler (newVal, oldValue) {
+          if (newVal !== oldValue) {
+            this.preDisabled = false
+            this.afterDisabled = false
+            // 判断跳转页是否为第一页
+            if (newVal === 0) {
+              this.preDisabled = true
+            }
           }
-          // 缓存有数据的页数
-          if (this.dataLength > 0) {
-            this.cachePage = oldValue
-          }
-        }
+        },
+        immediate: true
       },
       dataLength  (newVal, oldValue) {
         // 判断能否点下一页
@@ -65,6 +64,12 @@ export default {
           } else {
             this.afterDisabled = false
           }
+        }
+        // 缓存有数据的页数
+        if (newVal > 0) {
+          this.cachePage = this.page
+        } else {
+          this.cachePage = 0
         }
       }
     },
@@ -79,10 +84,6 @@ export default {
     },
     created () {
         this.page = this.startPage
-        // 判断跳转页是否为第一页
-        if (this.page === 0) {
-          this.preDisabled = true
-        }
     },
     methods: {
         // 跳转页数
@@ -91,7 +92,6 @@ export default {
           const type = isNaN(page)
           if (!type) {
             this.$emit('changePage', (page - 1) * this.limit)
-            this.getList()
           }
           this.turnPage = ''
         },
@@ -103,12 +103,10 @@ export default {
             this.page -= this.limit
           }
           this.$emit('changePage', this.page)
-          this.getList()
         },
         afterPage () {
           this.page += this.limit
           this.$emit('changePage', this.page)
-          this.getList()
         }
     }
 }
