@@ -86,9 +86,12 @@ export default {
     methods: {
         // 跳转页数
         turnToPage () {
-          const page = parseInt(this.turnPage)
+          let page = parseInt(this.turnPage)
           const type = isNaN(page)
           if (!type) {
+            if (page <= 0) {
+              page = 1
+            }
             this.$emit('changePage', (page - 1) * this.limit)
           }
           this.turnPage = ''
